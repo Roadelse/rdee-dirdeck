@@ -1,0 +1,15 @@
+
+ade.*
+ade
+__pycache__/
+.vscode/
+src/dms/bin/*.json
+
+export.*/
+
+
+# branch: main
+/pyrightconfig.json
+/dev/
+/deploy/
+

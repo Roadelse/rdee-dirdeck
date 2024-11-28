@@ -1,0 +1,1 @@
+../../wurial/bin/wurial.py
