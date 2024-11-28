@@ -1,0 +1,61 @@
+#!/bin/bash
+
+force=0
+while getopts "f" arg; do
+    case $arg in
+    f)
+        force=1
+        ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+# 检查参数数量是否正确
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 source_directory destination_root"
+    exit 1
+fi
+
+# 获取命令行参数
+srcT=$(realpath $1)
+dst_dir=$(realpath $2)
+
+# 递归函数，处理源文件夹及其子目录中的文件
+link_files_recursively() {
+    local srcT="$1"
+    local dstT="$2"
+
+    echo src=$srcT
+    echo dst=$dstT
+
+    mkdir -p $dstT
+
+    # 遍历当前目录下的文件
+    if [[ -n $(ls -Ad $srcT/* 2>/dev/null) ]]; then
+        for file in "$srcT"/*; do
+            # 如果是文件，则创建软链接
+            if [ -f "$file" ]; then
+                rel_path=$(realpath --relative-base="$srcT" "$file")
+                echo "rel_path=$rel_path"
+                target_file="$dstT/$rel_path"
+                target_dir=$(dirname $target_file)
+                mkdir -p $target_dir
+                if [[ $force == 1 ]]; then
+                    ln -sf "$file" "$target_file"
+                else
+                    ln -s "$file" "$target_file"
+                fi
+            # 如果是目录，则递归处理
+            elif [ -d "$file" ]; then
+                link_files_recursively "$file" "$dstT/${file##*/}"
+            else
+                echo "Invalid $file"
+            fi
+        done
+    else
+        echo "Empty dir: $srcT"
+    fi
+}
+
+# 调用递归函数，开始处理
+link_files_recursively "$srcT" "$dst_dir"
